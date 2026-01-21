@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Study Plan & Schedule Tracker</title>
+
+    <style>@import url('css/style.css');</style>
+</head>
+<body>
+
+<div class="container" id="loginSection">
+
+    <img class="logos" src="./img/logo.jpg" alt="Logo">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+</div>
+
+<div class="container hidden" id="appSection">
+    <h2>Study Plan & Schedule Tracker</h2>
+
+    <h3>Add Study Task</h3>
+    <input type="text" id="taskName" placeholder="Task name">
+    <input type="date" id="taskDate">
+    <input type="time" id="taskTime" placeholder="chose Time">
+    <button onclick="addTask()">Add Task</button>
+
+    <div class="actions">
+        <button onclick="showDaily()">Daily View</button>
+        <button onclick="showWeekly()">Weekly View</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <h3>Tasks</h3>
+    <div id="taskList"></div>
+</div>
+
+<script>
+    const loginSection = document.getElementById("loginSection");
+    const appSection = document.getElementById("appSection");
+    const taskList = document.getElementById("taskList");
+
+    function login() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        if (username !== "" && password !== "") {
+            localStorage.setItem("loggedIn", "true");
+            loginSection.classList.add("hidden");
+            appSection.classList.remove("hidden");
+            loadTasks();
+        } else {
+            alert("Please enter username and password.");
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem("loggedIn");
+        appSection.classList.add("hidden");
+        loginSection.classList.remove("hidden");
+    }
+
+    function addTask() {
+        const name = document.getElementById("taskName").value;
+        const date = document.getElementById("taskDate").value;
+        const time = document.getElementById("taskTime").value;
+
+        if (name === "" || date === "" || time === "") {
+            alert("Please fill all fields.");
+            return;
+        }
+
+        const task = { name, date, time };
+        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        tasks.push(task);
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+
+        document.getElementById("taskName").value = "";
+        document.getElementById("taskDate").value = "";
+        document.getElementById("taskTime").value = "";
+
+        loadTasks();
+    }
+
+    function loadTasks(filter = null) {
+        taskList.innerHTML = "";
+        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        const today = new Date().toISOString().split("T")[0];
+
+        tasks.forEach((task, index) => {
+            if (filter === "daily" && task.date !== today) return;
+
+            const taskDiv = document.createElement("div");
+            taskDiv.className = "task";
+            taskDiv.innerHTML = `
+                <span>${task.name} - ${task.date} ${task.time}</span>
+                <button onclick="deleteTask(${index})">Delete</button>
+            `;
+            taskList.appendChild(taskDiv);
+        });
+    }
+
+    function deleteTask(index) {
+        const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        tasks.splice(index, 1);
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+        loadTasks();
+    }
+
+    function showDaily() {
+        loadTasks("daily");
+    }
+
+    function showWeekly() {
+        loadTasks();
+    }
+
+    if (localStorage.getItem("loggedIn") === "true") {
+        loginSection.classList.add("hidden");
+        appSection.classList.remove("hidden");
+        loadTasks();
+    }
+</script>
+
+</body>
+</html>
